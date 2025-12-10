@@ -1,0 +1,108 @@
+### Brokage Firm API Test Dosyası
+### VS Code "REST Client" extension ile kullanılabilir
+
+### ========== AUTH ==========
+
+### Register - Yeni kullanıcı kayıt
+POST http://localhost:8080/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Test User23",
+  "username": "testuser23",
+  "password": "123456",
+  "email": "test2@test.com",
+  "role": "CUSTOMER"
+}
+
+### Login - Admin girişi
+# @name login
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+    "username": "admin",
+    "password": "admin123"
+}
+
+### Token'ı kaydet (login isteğinden sonra otomatik alınır)
+@token = {{login.response.body.token}}
+
+### ========== CUSTOMERS ==========
+
+### Tüm müşterileri listele (Admin only)
+GET http://localhost:8080/api/customers
+Authorization: Bearer {{token}}
+
+### Kendi profilimi getir
+GET http://localhost:8080/api/customers/me
+Authorization: Bearer {{token}}
+
+### ========== ASSETS ==========
+
+### Varlıkları listele
+GET http://localhost:8080/api/assets
+Authorization: Bearer {{token}}
+
+### Para yatır (Admin only)
+POST http://localhost:8080/api/assets/deposit
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "customerId": 1,
+    "amount": 5000
+}
+
+### Para çek
+POST http://localhost:8080/api/assets/withdraw
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "customerId": 1,
+    "amount": 100,
+    "iban": "TR123456789012345678901234"
+}
+
+### ========== ORDERS ==========
+
+### Emirleri listele
+GET http://localhost:8080/api/orders
+Authorization: Bearer {{token}}
+
+### Bekleyen emirleri listele
+GET http://localhost:8080/api/orders/pending
+Authorization: Bearer {{token}}
+
+### BUY emri oluştur
+POST http://localhost:8080/api/orders
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "customerId": 1,
+    "assetName": "GOOG",
+    "orderSide": "BUY",
+    "size": 5,
+    "price": 100
+}
+
+### SELL emri oluştur
+POST http://localhost:8080/api/orders
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "customerId": 1,
+    "assetName": "AAPL",
+    "orderSide": "SELL",
+    "size": 3,
+    "price": 160
+}
+
+### Emir iptal et (order ID'yi değiştir)
+DELETE http://localhost:8080/api/orders/3
+Authorization: Bearer {{token}}
+
+
