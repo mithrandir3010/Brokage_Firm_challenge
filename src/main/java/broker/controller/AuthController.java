@@ -30,30 +30,30 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(request.username(), request.password())
+                new UsernamePasswordAuthenticationToken(request.username(), request.password())
         );
 
         String token = tokenProvider.generateToken(authentication);
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
         return ResponseEntity.ok(new AuthResponse(
-            token,
-            userDetails.getCustomerId(),
-            userDetails.getUsername(),
-            userDetails.getRole()
+                token,
+                userDetails.getCustomerId(),
+                userDetails.getUsername(),
+                userDetails.getRole()
         ));
     }
 
     @PostMapping("/register")
     public ResponseEntity<CustomerResponse> register(@Valid @RequestBody CreateCustomerRequest request) {
         String encodedPassword = passwordEncoder.encode(request.password());
-        
+
         Customer customer = customerService.createCustomer(
-            request.name(),
-            request.username(),
-            encodedPassword,
-            request.email(),
-            "CUSTOMER"
+                request.name(),
+                request.username(),
+                encodedPassword,
+                request.email(),
+                "CUSTOMER"
         );
 
         return ResponseEntity.ok(CustomerResponse.fromEntity(customer));
