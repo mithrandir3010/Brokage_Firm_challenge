@@ -25,7 +25,7 @@ A full-stack brokerage application for managing stock buy/sell orders on Borsa I
 - ✅ Pessimistic locking for data consistency
 - ✅ BigDecimal for precise financial calculations
 
-## 🛠️ Technologies
+## 🛠️ Tech Stack
 
 ### Backend
 | Technology | Version |
@@ -53,53 +53,60 @@ A full-stack brokerage application for managing stock buy/sell orders on Borsa I
 
 ```
 Brokage_Firm_challenge/
-├── src/main/java/broker/
-│   ├── controller/          # REST API endpoints
-│   │   ├── AuthController.java
-│   │   ├── CustomerController.java
-│   │   ├── OrderController.java
-│   │   └── AssetController.java
-│   ├── service/             # Business logic
-│   │   ├── CustomerService.java
-│   │   ├── OrderService.java
-│   │   └── AssetService.java
-│   ├── repository/          # Database access
-│   ├── model/               # Entity classes
-│   │   ├── Customer.java
-│   │   ├── Order.java
-│   │   └── Asset.java
-│   ├── dto/                 # Request/Response DTOs
-│   ├── exception/           # Custom exception classes
-│   └── security/            # JWT and security configuration
-├── frontend/
+├── src/main/java/broker/      # Backend source code
+│   ├── controller/            # REST API endpoints
+│   ├── service/               # Business logic
+│   ├── repository/            # Database access (JPA)
+│   ├── model/                 # Entity classes
+│   ├── dto/                   # Request/Response DTOs
+│   ├── exception/             # Custom exceptions
+│   └── security/              # JWT & Security config
+├── src/test/java/broker/      # Backend tests
+├── frontend/                  # React frontend
 │   ├── src/
-│   │   ├── components/      # React components
-│   │   ├── context/         # Auth context
-│   │   ├── services/        # API calls
-│   │   └── types/           # TypeScript types
-│   └── ...
+│   │   ├── components/        # React components
+│   │   ├── context/           # Auth context
+│   │   ├── services/          # API calls (Axios)
+│   │   └── types/             # TypeScript types
+│   ├── package.json
+│   └── vite.config.ts
 ├── docker/
-│   └── docker-compose.yml   # PostgreSQL container
-└── build.gradle
+│   └── docker-compose.yml     # PostgreSQL container
+├── scripts/
+│   └── start-all.sh           # Start all services
+├── build.gradle               # Backend dependencies
+└── README.md
 ```
 
-## 🚦 Installation & Setup
+## 🚦 Quick Start
 
 ### Prerequisites
-- Java 21
-- Node.js 20+
-- Docker
 
-### 1. Start Database
+- **Java 21** - [Download](https://adoptium.net/)
+- **Node.js 20+** - [Download](https://nodejs.org/)
+- **Docker** - [Download](https://www.docker.com/)
+
+### Option 1: Start All Services (Recommended)
 
 ```bash
-cd docker
-docker compose up -d
+# Clone the repository
+git clone https://github.com/mithrandir3010/Brokage_Firm_challenge.git
+cd Brokage_Firm_challenge
+
+# Start all services with one command
+./scripts/start-all.sh
 ```
 
-Or manually:
+### Option 2: Manual Setup
+
+#### Step 1: Start Database
 
 ```bash
+# Using Docker Compose
+cd docker
+docker compose up -d
+
+# Or manually
 docker run -d \
   --name mypostgres \
   -e POSTGRES_USER=myuser \
@@ -109,30 +116,62 @@ docker run -d \
   postgres:17
 ```
 
-### 2. Start Backend
+#### Step 2: Start Backend
 
 ```bash
+# From project root
 ./gradlew bootRun
 ```
 
-Backend will run at http://localhost:8080
+Backend will be available at: **http://localhost:8080**
 
-### 3. Start Frontend
+#### Step 3: Start Frontend
 
 ```bash
+# Navigate to frontend directory
 cd frontend
+
+# Install dependencies (first time only)
 npm install
+
+# Start development server
 npm run dev
 ```
 
-Frontend will run at http://localhost:3000
+Frontend will be available at: **http://localhost:3000**
+
+## 🔧 Environment Configuration
+
+### Backend (`application.properties`)
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `spring.datasource.url` | `jdbc:postgresql://localhost:5433/mydb` | Database URL |
+| `spring.datasource.username` | `myuser` | Database username |
+| `spring.datasource.password` | `sifre123` | Database password |
+| `JWT_SECRET` | (env variable) | JWT signing secret |
+| `JWT_EXPIRATION` | `86400000` | Token expiration (24h) |
+
+### Frontend (`.env`)
+
+Copy `.env.example` to `.env` and configure:
+
+```bash
+cd frontend
+cp .env.example .env
+```
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `VITE_BACKEND_URL` | `http://localhost:8080` | Backend URL for proxy |
+| `VITE_API_URL` | `http://localhost:8080/api` | API URL for production |
 
 ## 🔐 Test Accounts
 
-| Username | Password | Role |
-|----------|----------|------|
-| testuser | test123 | ADMIN |
-| customer1 | test123 | CUSTOMER |
+| Username | Password | Role | Description |
+|----------|----------|------|-------------|
+| testuser | test123 | ADMIN | Full access to admin panel |
+| customer1 | test123 | CUSTOMER | Standard customer account |
 
 ## 📡 API Endpoints
 
@@ -168,23 +207,23 @@ Frontend will run at http://localhost:3000
 
 ### Order Creation (BUY)
 1. Customer's TRY balance is checked
-2. `size × price` amount is deducted from usableSize (blocked)
+2. `size × price` amount is blocked from usableSize
 3. Order is created with PENDING status
 
 ### Order Creation (SELL)
 1. Customer's stock balance is checked
-2. Sell quantity is deducted from usableSize (blocked)
+2. Sell quantity is blocked from usableSize
 3. Order is created with PENDING status
 
-### Order Matching
+### Order Matching (Admin only)
 1. Only PENDING orders can be matched
-2. BUY: Stock is added to customer, blocked TRY is removed
-3. SELL: TRY is added to customer, blocked stock is removed
+2. BUY: Stock added to customer, blocked TRY removed
+3. SELL: TRY added to customer, blocked stock removed
 4. Order status changes to MATCHED
 
 ### Order Cancellation
 1. Only PENDING orders can be cancelled
-2. Blocked amount/quantity is added back to usableSize
+2. Blocked amount/quantity returned to usableSize
 3. Order status changes to CANCELED
 
 ## 🧪 Testing
@@ -195,30 +234,53 @@ Frontend will run at http://localhost:3000
 
 # Run specific test class
 ./gradlew test --tests "broker.service.OrderServiceTest"
+
+# Run with coverage
+./gradlew test jacocoTestReport
 ```
 
 ### Test Coverage
 - ✅ Unit tests (Service layer)
-- ✅ Controller tests
-- ✅ Integration tests (End-to-end scenarios)
+- ✅ Controller tests (MockMvc)
+- ✅ Integration tests (End-to-end)
 
-## 📸 Screenshots
+## 🐳 Docker Commands
 
-### Home Page
-Modern and professional design with stock market themed background.
+```bash
+# Start PostgreSQL
+docker compose -f docker/docker-compose.yml up -d
 
-### Dashboard
-- TRY balance summary
-- Total asset count
-- Pending order count
-- Recent transactions
+# Stop PostgreSQL
+docker compose -f docker/docker-compose.yml down
 
-### Order Creation
-- Popular stock selection
-- Buy/Sell toggle
-- Real-time total calculation
+# View logs
+docker logs mypostgres
 
-## 📝 License
+# Access PostgreSQL CLI
+docker exec -it mypostgres psql -U myuser -d mydb
+```
+
+## 📝 Development
+
+### Backend Hot Reload
+Spring Boot DevTools is included. Changes will auto-reload.
+
+### Frontend Hot Reload
+Vite provides instant HMR (Hot Module Replacement).
+
+### Code Style
+- Backend: Standard Java conventions
+- Frontend: ESLint + TypeScript strict mode
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
 
 This project is developed for educational purposes.
 
